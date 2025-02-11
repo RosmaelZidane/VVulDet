@@ -1,12 +1,14 @@
 # Byte-compiled / optimized / DLL files
 /sourcescripts/utils/__pycache__/
 /sourcescripts/__pycache__/
+/sourcescripts/lightning_logs/
 /sourcescripts/storage/external/domain_CVEFixes-Python.csv
 /sourcescripts/storage/external/domain_CVEFixes-Python1.csv
 /sourcescripts/storage/external/joern-cli
 /sourcescripts/storage/cache/
 /sourcescripts/storage/processed/
 /sourcescripts/workspace/
+sourcescripts/utils/lightning_logs/
 sourcescripts/storage/outputs/ccodebert_model_metrics.pdf
 /sourcescripts/storage/outputs/codebert_metrics.csv
 /sourcescripts/storage/outputs/codebert_model_metrics.csv

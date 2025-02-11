@@ -1,9 +1,7 @@
 
 from collections import defaultdict
-from multiprocessing import Pool
 import scipy.sparse as sparse
 from pathlib import Path
-from glob import glob
 import pickle as pkl
 import pandas as pd
 import numpy as np

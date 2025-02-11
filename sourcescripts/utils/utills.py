@@ -8,7 +8,7 @@ import subprocess
 from datetime import datetime
 from multiprocessing import Pool
 from pathlib import Path
-
+from glob import glob
 import pandas as pd
 from tqdm import tqdm
 
@@ -139,7 +139,7 @@ def get_run_id(args=None):
 
 def hashstr(s):
     """Hash a string."""
-    return int(hashlib.sha1(s.encode("utf-8")).hexdigest(), 16) % (10 ** 8)
+    return int(hashlib.sha1(s.embed("utf-8")).hexdigest(), 16) % (10 ** 8)
 
 
 def dfmp(df, function, columns=None, ordr=True, workers=6, cs=10, desc="Run: "):
