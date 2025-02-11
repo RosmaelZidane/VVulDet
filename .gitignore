@@ -1,5 +1,5 @@
 # Byte-compiled / optimized / DLL files
-/sourcescripts/utilss/__pycache__/
+/sourcescripts/utils/__pycache__/
 /sourcescripts/__pycache__/
 /sourcescripts/storage/external/domain_CVEFixes-Python.csv
 /sourcescripts/storage/external/domain_CVEFixes-Python1.csv
