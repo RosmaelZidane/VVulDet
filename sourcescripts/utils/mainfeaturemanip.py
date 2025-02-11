@@ -24,8 +24,6 @@ except:
     import utils.CodeBERT as cb
     import utils.preprocessdata as prep
 
-
-
 class CVEFixesDataset:
     """Represent CVEFixes as graph dataset."""
 
@@ -44,14 +42,14 @@ class CVEFixesDataset:
         # Balance training set
         if partition == "train" or partition == "val":
             vul = self.df[self.df.vul == 1]
-            nonvul = self.df[self.df.vul == 0]#.sample(len(vul), random_state=0)
+            nonvul = self.df[self.df.vul == 0] #.sample(len(vul), random_state=0)
             self.df = pd.concat([vul, nonvul])
 
         # Correct ratio for test set
         if partition == "test":
             vul = self.df[self.df.vul == 1]
             nonvul = self.df[self.df.vul == 0]
-            nonvul = nonvul#.sample(min(len(nonvul), len(vul) * 20), random_state=0) ##----->>>
+            nonvul = nonvul #.sample(min(len(nonvul), len(vul) * 20), random_state=0) ##----->>>
             self.df = pd.concat([vul, nonvul])
 
         # Small sample (for debugging):
@@ -74,7 +72,6 @@ class CVEFixesDataset:
         self.idx2id = pd.Series(self.df.id.values, index=self.df.idx).to_dict()
 
         
-
     def itempath(_id):
         """Get itempath path from item id."""
         return imp.processed_dir() / f"CVEFixes/before/{_id}.py"
@@ -157,18 +154,6 @@ def get_sast_lines(sast_pkl_path):
         pass
     return ret
 
-
-# Write a function to read the text file on the from the vul-description folder
-
-def read_CVEvuldescription(_idd):
-    """This function read domain information from the description folders"""
-    pathd = f"{imp.processed_dir()}/CVEFixes/CVEdescription"
-    
-    with open(f"{pathd}/{_idd}.txt", 'r') as f:
-        content_ = f.read()
-    
-    return content_
-        
 class CVEFixesDatasetLineVD(CVEFixesDataset):
     """IVDetect version of CVEFixes."""
 
@@ -212,28 +197,30 @@ class CVEFixesDatasetLineVD(CVEFixesDataset):
             chunked_batches = imp.chunks(code, 128)
             features = [codebert.embed(c).detach().cpu() for c in chunked_batches]
             g.ndata["_CODEBERT"] = th.cat(features)
+        
         g.ndata["_RANDFEAT"] = th.rand(size=(g.number_of_nodes(), 100))
         g.ndata["_LINE"] = th.Tensor(lineno).int()
         g.ndata["_VULN"] = th.Tensor(vuln).float()
-        try:
-            g.ndata["_FVULN"] = g.ndata["_VULN"].max().repeat((g.number_of_nodes()))
-            g.edata["_ETYPE"] = th.Tensor(et).long()
-            emb_path = imp.cache_dir() / f"codebert_method_level/{_id}.pt"
-            g.ndata["_FUNC_EMB"] = th.load(emb_path).repeat((g.number_of_nodes(), 1))
-        except:
-            print(g)
-            print(_id)
-        
-        # # read the description and optain embedding with codebert
-        # desc_ = read_CVEvuldescription(_idd = _id)
-        # cb = CodeBert()  
-        # text_ = [desc_]
-        # embedd_text = cb.embed(sents = text_).detach().cpu()
-        # g.ndata['_CVEVuldesc'] = th.Tensor(embedd_text).repeat((g.number_of_nodes(), 1))
 
-        # Node embeddings step 
-        nx_graph = g.to_networkx() # dimensions=64, walk_length=30, num_walks=200, workers=4)
-        node2vec = Node2Vec(nx_graph, dimensions=768, walk_length=5, num_walks=10, workers=4)
+        # # Get SAST labels # try to solve this issue from running the get graph
+        # s = get_sast_lines(processed_dir() / f"CVEFixes/before/{_id}.java.sast.pkl")
+        # rats = [1 if i in s["rats"] else 0 for i in g.ndata["_LINE"]]
+        # cppcheck = [1 if i in s["cppcheck"] else 0 for i in g.ndata["_LINE"]]
+        # flawfinder = [1 if i in s["flawfinder"] else 0 for i in g.ndata["_LINE"]]
+        # g.ndata["_SASTRATS"] = th.tensor(rats).long()
+        # g.ndata["_SASTCPP"] = th.tensor(cppcheck).long()
+        # g.ndata["_SASTFF"] = th.tensor(flawfinder).long()
+
+        g.ndata["_FVULN"] = g.ndata["_VULN"].max().repeat((g.number_of_nodes()))
+        g.edata["_ETYPE"] = th.Tensor(et).long()
+        emb_path = imp.cache_dir() / f"codebert_method_level/{_id}.pt"
+        g.ndata["_FUNC_EMB"] = th.load(emb_path).repeat((g.number_of_nodes(), 1))
+        
+        
+        # # Node embeddings step 
+        nx_graph = g.to_networkx() 
+        # node2vec = Node2Vec(nx_graph, dimensions=768, walk_length= g.num_nodes(), num_walks= g.num_edges(), workers=4)
+        node2vec = Node2Vec(nx_graph, dimensions=768, walk_length= 5, num_walks= 10, workers=4)
         model = node2vec.fit(window = 5, min_count = 1, batch_words = 8)
         embeddings = model.wv
         node_embeddings = {int(node): embeddings[str(node)] for node in nx_graph.nodes}
@@ -250,6 +237,7 @@ class CVEFixesDatasetLineVD(CVEFixesDataset):
         # normalise nodes and edge features
         g.ndata['node_embedding'] = (g.ndata['node_embedding'] - th.mean(g.ndata['node_embedding'], dim = 0))/th.std(g.ndata['node_embedding'], dim = 0)
         g.edata['edge_embedding'] = (g.edata['edge_embedding'] - th.mean(g.edata['edge_embedding'], dim = 0))/th.std(g.edata['edge_embedding'], dim = 0)
+        
         
         g = dgl.add_self_loop(g)
         save_graphs(str(savedir), [g])
@@ -294,6 +282,7 @@ class CVEFixesDatasetLineVD(CVEFixesDataset):
         return self.item(self.idx2id[idx]) 
 
 save_path = f"{imp.cache_dir()}/codebert_finetuned"
+
 class CVEFixesDatasetLineVDDataModule(pl.LightningDataModule):
     """Pytorch Lightning Datamodule for CVEFixes."""
 
@@ -314,7 +303,7 @@ class CVEFixesDatasetLineVDDataModule(pl.LightningDataModule):
         self.train = CVEFixesDatasetLineVD(partition="train", **dataargs)
         self.val = CVEFixesDatasetLineVD(partition="val", **dataargs)
         self.test = CVEFixesDatasetLineVD(partition="test", **dataargs)
-        codebert = cb.CodeBertEmbedder(model_path = save_path) # the model_path is from CodeBERT file
+        codebert = cb.CodeBertEmbedder(model_path = save_path) # save_path is from CodeBERT file
         self.train.cache_codebert_method_level(codebert)
         self.val.cache_codebert_method_level(codebert)
         self.test.cache_codebert_method_level(codebert)
@@ -351,15 +340,15 @@ class CVEFixesDatasetLineVDDataModule(pl.LightningDataModule):
         if self.nsampling:
             g = next(iter(GraphDataLoader(self.val, batch_size=len(self.val), num_workers=10)))
             return self.node_dl(g)
-        return GraphDataLoader(self.val, batch_size=self.batch_size, num_workers=10)
+        return GraphDataLoader(self.val, shuffle = False, batch_size=self.batch_size, num_workers=10)
 
     def val_graph_dataloader(self):
         """Return test dataloader."""
-        return GraphDataLoader(self.val, batch_size=32, num_workers=10)
+        return GraphDataLoader(self.val, shuffle = False, batch_size=32, num_workers=10)
 
     def test_dataloader(self):
         """Return test dataloader."""
-        return GraphDataLoader(self.test, batch_size=32, num_workers=10)
+        return GraphDataLoader(self.test, shuffle = False, batch_size=32, num_workers=10)
 
 
 class SCELoss(torch.nn.Module):
@@ -394,5 +383,6 @@ class SCELoss(torch.nn.Module):
         rce = -1 * torch.sum(pred * torch.log(label_one_hot), dim=1)
 
         # Loss
-        loss = self.alpha * ce + self.beta * rce.mean() 
+        loss = self.alpha * ce + self.beta * rce.mean()
         return loss
+    

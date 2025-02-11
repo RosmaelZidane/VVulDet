@@ -392,7 +392,7 @@ samplesz = -1
 
 # list of epoch tried [100, 150 , 200, 230, 300], note that effective learning is achieve with hight epchs
 
-max_epochs = 10 
+max_epochs = 100
 
 
 if not os.path.exists(path=checkpoint_path):

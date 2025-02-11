@@ -154,9 +154,10 @@ class LitCodeBERT(pl.LightningModule):
 
 
 # Fine-tune the model and Save the fine-tuned model
-save_path = imp.get_dir(f"{imp.cache_dir()}/codebert_finetuned")
+save_path = f"{imp.cache_dir()}/codebert_finetuned"
 if not os.path.exists(save_path):
     print(f"Fine-tuning CodeBert model")
+    save_path = imp.get_dir(f"{imp.cache_dir()}/codebert_finetuned")
     datamodule = CVEFixesDatasetNLPDataModule(CVEFixesDatasetNLP, batch_size=16)
     model = LitCodeBERT(lr=2e-5)
     trainer = pl.Trainer(max_epochs=3, accelerator='gpu' if torch.cuda.is_available() else 'cpu')
