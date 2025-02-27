@@ -103,15 +103,15 @@ class CVEFixesDatasetNLPDataModule(pl.LightningDataModule):
 
     def train_dataloader(self):
         """Return train dataloader."""
-        return DataLoader(self.train, shuffle=True, batch_size=self.batch_size)
+        return DataLoader(self.train, shuffle=True, batch_size=self.batch_size, num_workers = 15)
 
     def val_dataloader(self):
         """Return val dataloader."""
-        return DataLoader(self.val, batch_size=self.batch_size)
+        return DataLoader(self.val, batch_size=self.batch_size, num_workers = 15)
 
     def test_dataloader(self):
         """Return test dataloader."""
-        return DataLoader(self.test, batch_size=self.batch_size)
+        return DataLoader(self.test, batch_size=self.batch_size, num_workers = 15)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
