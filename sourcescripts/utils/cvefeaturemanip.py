@@ -24,6 +24,7 @@ except:
     import utils.CodeBERT as cb
     import utils.preprocessdata as prep
 
+        
 class CVEFixesDataset:
     """Represent CVEFixes as graph dataset."""
 
@@ -42,14 +43,14 @@ class CVEFixesDataset:
         # Balance training set
         if partition == "train" or partition == "val":
             vul = self.df[self.df.vul == 1]
-            nonvul = self.df[self.df.vul == 0] #.sample(len(vul), random_state=0)
+            nonvul = self.df[self.df.vul == 0]#.sample(len(vul), random_state=0)
             self.df = pd.concat([vul, nonvul])
 
         # Correct ratio for test set
         if partition == "test":
             vul = self.df[self.df.vul == 1]
             nonvul = self.df[self.df.vul == 0]
-            nonvul = nonvul #.sample(min(len(nonvul), len(vul) * 20), random_state=0) ##----->>>
+            nonvul = nonvul#.sample(min(len(nonvul), len(vul) * 20), random_state=0) ##----->>>
             self.df = pd.concat([vul, nonvul])
 
         # Small sample (for debugging):
@@ -154,6 +155,16 @@ def get_sast_lines(sast_pkl_path):
         pass
     return ret
 
+
+def read_CVEvuldescription(_idd):
+    """This function read domain information from the description folders"""
+    pathd = f"{imp.processed_dir()}/CVEFixes/CVEdescription"
+    
+    with open(f"{pathd}/{_idd}.txt", 'r') as f:
+        content_ = f.read()
+    
+    return content_
+
 class CVEFixesDatasetLineVD(CVEFixesDataset):
     """IVDetect version of CVEFixes."""
 
@@ -201,11 +212,19 @@ class CVEFixesDatasetLineVD(CVEFixesDataset):
         g.ndata["_RANDFEAT"] = th.rand(size=(g.number_of_nodes(), 100))
         g.ndata["_LINE"] = th.Tensor(lineno).int()
         g.ndata["_VULN"] = th.Tensor(vuln).float()
+
         g.ndata["_FVULN"] = g.ndata["_VULN"].max().repeat((g.number_of_nodes()))
         g.edata["_ETYPE"] = th.Tensor(et).long()
         emb_path = imp.cache_dir() / f"codebert_method_level/{_id}.pt"
         g.ndata["_FUNC_EMB"] = th.load(emb_path).repeat((g.number_of_nodes(), 1))
         
+        # read the description and optain embedding with codebert
+        
+        embedder = cb.CodeBertEmbedder(model_path = save_path) # save_path is from CodeBERT file
+        desc_ = read_CVEvuldescription(_idd = _id)
+        text_ = [desc_]
+        embedd_text = embedder.embed( text = text_).detach().cpu()
+        g.ndata['_CVEVuldesc'] = th.Tensor(embedd_text).repeat((g.number_of_nodes(), 1))
         
         # # Node embeddings step 
         nx_graph = g.to_networkx() 
@@ -268,7 +287,7 @@ class CVEFixesDatasetLineVD(CVEFixesDataset):
         except:
             print(f"the null id is the from -------------------> {self.idx2id[idx]}")
             print(f"Delete the corresponding ID: {self.idx2id[idx]} line from the metadata and the corresponding constructed graph.")
-            #print(f"------------idx-------------- {idx}")  
+            #print(f"------------idx-------------- {idx}") 
             
         return self.item(self.idx2id[idx]) 
 
@@ -316,7 +335,7 @@ class CVEFixesDatasetLineVDDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=shuffle,
             drop_last=False,
-            num_workers=10,
+            num_workers=15,
         ) 
 
     def train_dataloader(self):

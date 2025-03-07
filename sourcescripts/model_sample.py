@@ -12,7 +12,7 @@ import os
 from dgl.nn import GATConv, GraphConv
 from torch.optim import AdamW
 
-import utils.mainfeaturemanip as gpht
+import utils.samplefeaturemanip as gpht
 import utils.utills as imp 
 
 class LitGNN(pl.LightningModule):
@@ -251,11 +251,13 @@ class LitGNN(pl.LightningModule):
         preds = th.argmax(logits1, dim=1)
         preds_func = th.argmax(logits[1], dim=1) if not self.hparams.methodlevel else None
         self.log("val_loss", loss, prog_bar=True, batch_size=batch_idx)
+        self.log("val_auroc", self.auroc(preds, labels), prog_bar=True, batch_size=batch_idx)
         self.log("val_acc", self.accuracy(preds, labels), prog_bar=True, batch_size=batch_idx)
         self.log("val_mcc", self.mcc(preds, labels), prog_bar=True, batch_size=batch_idx)
 
         if not self.hparams.methodlevel:
             self.log("val_acc_func", self.accuracy(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
+            self.log("val_auroc_func", self.auroc(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
             self.log("val_mcc_func", self.mcc(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
         return loss
 
@@ -302,13 +304,13 @@ class LitGNN(pl.LightningModule):
         return AdamW(self.parameters(), lr=self.lr)
 
 
-
 # compute metrics function
 def statementcalculate_metrics(model, data):
     """
     Calculate ranking metrics: MRR, N@5, MFR,
     and classification metrics: F1-Score, Precision.
     """
+
     # Extract function-level predictions and true labels
     all_preds_ = []
     all_labels_ = []
@@ -382,9 +384,12 @@ def methodcalculate_metrics(model, data):
     roc_ = roc_auc_score(all_labels_, predicted_classes, average= "macro")
     mcc_ = matthews_corrcoef(all_labels_, predicted_classes)
     precisionq, recallq, thresholds = precision_recall_curve(all_labels_, predicted_classes)
+    
     pr_auc = auc(recallq, precisionq)
+    
     prediction = pd.DataFrame({"true label": all_labels_,
                           "Predicted_label": predicted_classes})
+    
 
     return {
         "accuracy": accuracy,
@@ -402,9 +407,11 @@ samplesz = -1
 
 # list of epoch tried [30, 50 , 130, 200, 250], note that effective learning is achieve with hight epchs
 
-max_epochs = 30
+max_epochs = 10
+
+
 if not os.path.exists(path=checkpoint_path):
-    print(f"[Infos ] --->> Training the main model")
+    print(f"[Infos ] --->> Training the model with Domain Knowledge: Reference function")
     run_id = imp.get_run_id()
     savepath = imp.get_dir(imp.processed_dir() / "codebert" / run_id)
     model = LitGNN( 
@@ -417,11 +424,11 @@ if not os.path.exists(path=checkpoint_path):
                    hdropout=0.5,
                    gatdropout=0.3,
                    num_heads=4,
-                   multitask="linemethod", # methodlevel
+                   multitask="linemethod", 
                    stmtweight=1,
                    gnntype="gat",
                    scea=0.5,
-                   lr=1e-4, # [1e-3, 1e-3, 1e-3]
+                   lr=1e-4, # [1e-3, 1e-5, 1e-3]
                    )
     
     # load data
@@ -447,25 +454,25 @@ if not os.path.exists(path=checkpoint_path):
         )
     trainer.fit(model, data)
     checkpoint_path = imp.get_dir(f"{imp.outputs_dir()}/checkpoints")
-    trainer.save_checkpoint(f"{checkpoint_path}/model-checkpoint.ckpt")
+    trainer.save_checkpoint(f"{checkpoint_path}/model-sample-checkpoint.ckpt")
     # test 
     trainer.test(model, data)
     print(f"Statement level prediction")
     metrics1 = methodcalculate_metrics(model, data)[0]
     dfm = pd.DataFrame([metrics1])
-    dfm.to_csv(f"{imp.outputs_dir()}/statement-evaluation_metrics.csv", index=False)
+    dfm.to_csv(f"{imp.outputs_dir()}/sample-statement-evaluation_metrics.csv", index=False)
     print(f"statelement {metrics1} ")
     # method level
     print(f"method level prediction")
     metrics = statementcalculate_metrics(model, data)[0]
     dfm = pd.DataFrame([metrics])
-    dfm.to_csv(f"{imp.outputs_dir()}/method-evaluation_metrics.csv", index=False)
+    dfm.to_csv(f"{imp.outputs_dir()}/sample-method-evaluation_metrics.csv", index=False)
     print(f"[Infos ] Metrics on test set \n{metrics}\n[Infos ] -> Done.")
 else:   
     print(f"[Infos ] ---> Saved model exits.")
     print(f"[Infos ] ---> Load from pretarined")
     # load model
-    model = LitGNN.load_from_checkpoint(f"{checkpoint_path}/model-checkpoint.ckpt")
+    model = LitGNN.load_from_checkpoint(f"{checkpoint_path}/model-sample-checkpoint.ckpt")
     # load data
     data = gpht.CVEFixesDatasetLineVDDataModule(
         batch_size=64,
@@ -481,13 +488,15 @@ else:
     print(f"Statement level prediction")
     metrics1 = methodcalculate_metrics(model, data)[0]
     dfm = pd.DataFrame([metrics1])
-    dfm.to_csv(f"{imp.outputs_dir()}/statement-evaluation_metrics.csv", index=False)
+    dfm.to_csv(f"{imp.outputs_dir()}/sample-statement-evaluation_metrics.csv", index=False)
     print(f"statelement {metrics1} ")
     # method level
     print(f"method level prediction")
     metrics = statementcalculate_metrics(model, data)[0]
     dfm = pd.DataFrame([metrics])
-    dfm.to_csv(f"{imp.outputs_dir()}/method-evaluation_metrics.csv", index=False)
+    dfm.to_csv(f"{imp.outputs_dir()}/sample-method-evaluation_metrics.csv", index=False)
     print(f"[Infos ] Metrics on test set \n{metrics}\n[Infos ] -> Done.")
 
     
+    
+

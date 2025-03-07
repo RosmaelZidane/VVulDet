@@ -14,6 +14,11 @@ sourcescripts/storage/outputs/ccodebert_model_metrics.pdf
 /sourcescripts/storage/outputs/codebert_model_metrics.csv
 /sourcescripts/storage/outputs/checkpoints/
 /sourcescripts/storage/external/codebert-base/
+Analysis_results
+/sourcescripts/aaaa.py
+lightning_logs/
+/sourcescripts/utils/lightning_logs/
+/sourcescripts/lightning_logs/
 *.py[cod]
 *$py.class
 

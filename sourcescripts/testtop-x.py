@@ -16,6 +16,7 @@ from torch.optim import AdamW
 import utils.mainfeaturemanip as gpht
 import utils.utills as imp 
 
+
 class LitGNN(pl.LightningModule):
     """Main Trainer."""
 
@@ -229,13 +230,11 @@ class LitGNN(pl.LightningModule):
         
         self.log("train_loss", loss, on_epoch=True, prog_bar=True, batch_size=batch_idx)
         self.log("train_loss_func", loss2, on_epoch=True, prog_bar=True, batch_size=batch_idx)
-        self.log("train_auroc", self.auroc(preds, labels), prog_bar=True, batch_size=batch_idx)
         self.log("train_acc", self.accuracy(preds, labels), prog_bar=True, batch_size=batch_idx)
         self.log("train_mcc", self.mcc(preds, labels), prog_bar=True, batch_size=batch_idx)
         
         if not self.hparams.methodlevel:
             self.log("train_acc_func", self.accuracy(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
-            self.log("train_auroc_func", self.auroc(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
             self.log("train_mcc_func", self.mcc(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
 
         return loss
@@ -254,16 +253,12 @@ class LitGNN(pl.LightningModule):
         preds = th.argmax(logits1, dim=1)
         preds_func = th.argmax(logits[1], dim=1) if not self.hparams.methodlevel else None
         self.log("val_loss", loss, prog_bar=True, batch_size=batch_idx)
-        self.log("val_auroc", self.auroc(preds, labels), prog_bar=True, batch_size=batch_idx)
         self.log("val_acc", self.accuracy(preds, labels), prog_bar=True, batch_size=batch_idx)
         self.log("val_mcc", self.mcc(preds, labels), prog_bar=True, batch_size=batch_idx)
-        self.log("val_prec", self.prec(preds, labels), prog_bar=True, batch_size=batch_idx)
 
         if not self.hparams.methodlevel:
             self.log("val_acc_func", self.accuracy(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
-            self.log("val_auroc_func", self.auroc(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
             self.log("val_mcc_func", self.mcc(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
-            self.log("val_prec", self.prec(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
         return loss
 
     def test_step(self, batch, batch_idx):
@@ -283,18 +278,12 @@ class LitGNN(pl.LightningModule):
         metrics = {
             "test_loss": loss,
             "test_acc": self.accuracy(preds, labels),
-            "test_auroc": self.auroc(preds, labels),
             "test_mcc": self.mcc(preds, labels),
-            "test_prec": self.prec(preds, labels),
-            "test_f1": self.f11(preds, labels)
         }
         
         if not self.hparams.methodlevel:
             metrics["test_acc_func"] = self.accuracy(preds_func, labels_func)
-            metrics["test_auroc_func"] = self.auroc(preds_func, labels_func)
             metrics["test_mcc_func"] = self.mcc(preds_func, labels_func)
-            metrics['test_f1'] = self.f11(preds_func, labels_func)
-            metrics['test_prec'] = self.prec(preds_func, labels_func)
 
         self.test_step_outputs.append(metrics)
         return metrics
@@ -314,6 +303,55 @@ class LitGNN(pl.LightningModule):
         """Configure optimizers."""
         return AdamW(self.parameters(), lr=self.lr)
 
+
+
+# compute metrics function
+def statementcalculate_metrics(model, data):
+    """
+    Calculate ranking metrics: MRR, N@5, MFR,
+    and classification metrics: F1-Score, Precision.
+    """
+    # Extract function-level predictions and true labels
+    all_preds_ = []
+    all_labels_ = []
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model.to(device)
+    model.eval()
+    for batch in data.test_dataloader():
+        with torch.no_grad():
+            logits, labels, labels_func = model.shared_step(batch.to(device), test=True)
+            if labels is not None:  # the comented code is best
+                preds_ = torch.softmax(logits[0], dim=1).cpu().numpy()
+                labels_f = labels.cpu().numpy()
+                all_preds_.extend(preds_)
+                all_labels_.extend(labels_f)
+
+    all_preds_ = np.array(all_preds_)
+    all_labels_ = np.array(all_labels_)
+
+
+    predicted_classes = np.argmax(all_preds_, axis=1)
+    f1_c = f1_score(all_labels_, predicted_classes, average="macro")
+    precision = precision_score(all_labels_, predicted_classes, average="macro")
+    accuracy = accuracy_score(all_labels_, predicted_classes, normalize= True )
+    recall = recall_score(all_labels_, predicted_classes, average= "macro") # average=None, zero_division=np.nan
+    roc_ = roc_auc_score(all_labels_, predicted_classes, average= "macro")
+    mcc_ = matthews_corrcoef(all_labels_, predicted_classes)
+    precisionq, recallq, thresholds = precision_recall_curve(all_labels_, predicted_classes)
+    pr_auc = auc(recallq, precisionq)
+    prediction = pd.DataFrame({"true label": all_labels_,
+                          "Predicted_label": predicted_classes})
+   
+    return {
+        "accuracy": accuracy,
+        "Precision": precision,
+        "F1-Score": f1_c,
+        "recall" : recall,
+        "roc_auc" : roc_,
+        "mcc": mcc_,
+        "pr_auc": pr_auc,
+    }, prediction
+    
 
 # load mode
 checkpoint_path = f"{imp.outputs_dir()}/checkpoints"
@@ -346,7 +384,7 @@ def calculate_metrics(model, top1data):
     for batch in graphs:
         with torch.no_grad():
             logits, labels, labels_func = model.shared_step(batch.to(device), test=True)
-            if labels is not None: 
+            if labels is not None:  # the comented code is best
                 preds_ = torch.softmax(logits[0], dim=1).cpu().numpy()
                 labels_f = labels.cpu().numpy()
                 all_preds_.extend(preds_)
@@ -355,18 +393,16 @@ def calculate_metrics(model, top1data):
     all_preds_ = np.array(all_preds_)
     all_labels_ = np.array(all_labels_)
 
+
     predicted_classes = np.argmax(all_preds_, axis=1)
-    f1_c = f1_score(all_labels_, predicted_classes, average= 'macro', zero_division = np.nan)
+    f1_c = f1_score(all_labels_, predicted_classes, average="macro")
     precision = precision_score(all_labels_, predicted_classes, average="macro")
     accuracy = accuracy_score(all_labels_, predicted_classes, normalize= True )
-    recall = recall_score(all_labels_, predicted_classes, average= "macro", zero_division=np.nan) # average=None, zero_division=np.nan
+    recall = recall_score(all_labels_, predicted_classes, average= "macro") # average=None, zero_division=np.nan
     roc_ = roc_auc_score(all_labels_, predicted_classes, average= "macro")
     mcc_ = matthews_corrcoef(all_labels_, predicted_classes)
     precisionq, recallq, thresholds = precision_recall_curve(all_labels_, predicted_classes)
-    
     pr_auc = auc(recallq, precisionq)
-    
-    
     prediction = pd.DataFrame({"true label": all_labels_,
                           "Predicted_label": predicted_classes})
     
@@ -405,7 +441,5 @@ idcwe = list(set(data_top1['CWE-ID']))[0]
 metrics = calculate_metrics(model, top1data = data_top1 )[0]
 dfm = pd.DataFrame([metrics])
 dfm.to_csv(f"{imp.outputs_dir()}/{idcwe}-evaluation_metrics.csv", index=False)
-prediction_ = calculate_metrics(model, top1data = data_top1)[1]
-prediction_.to_csv(f"{imp.outputs_dir()}/{idcwe}-predict_label.csv", index = False)
 print(f"Number of graph in for {idcwe}: {calculate_metrics(model, top1data = data_top1)[2]}")
 print(f"[Infos ] Metris \n{metrics} \n[Infos ] Saved \n-> Done ")
