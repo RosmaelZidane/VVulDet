@@ -389,6 +389,8 @@ metadata = pd.read_csv(f"{metadatapath}/CVEFixes/CVEFixes_metadata.csv")
 grouped_df = metadata.groupby('CWE-ID').size().reset_index(name='Count')
 grouped_df = grouped_df[grouped_df['CWE-ID'] != 'CWE-Other'] # remove function without specific CWE
 grouped_df = grouped_df[grouped_df['CWE-ID'] != 'NVD-CWE-noinfo'] # remove function without specific CWE
+grouped_df = grouped_df[grouped_df['CWE-ID'] != 'CWE-79'] # remove function without specific CWE
+grouped_df = grouped_df[grouped_df['CWE-ID'] == 'CWE-22'] # remove function without specific CWE
 
 # Sort the grouped DataFrame by 'Count' in descending order
 sorted_df = grouped_df.sort_values(by='Count', ascending=False)
