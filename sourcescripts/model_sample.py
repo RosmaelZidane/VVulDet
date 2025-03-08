@@ -63,10 +63,7 @@ class LitGNN(pl.LightningModule):
 
         # Metrics
         self.accuracy = torchmetrics.Accuracy(task="binary", num_classes=2, average = 'macro')
-        self.auroc = torchmetrics.AUROC(task="binary", num_classes=2, average = 'macro')
         self.mcc = torchmetrics.MatthewsCorrCoef(task="binary", num_classes=2)
-        self.prec = torchmetrics.Precision(task="binary", num_classes=2, average = 'macro')
-        self.f11 = torchmetrics.F1Score(task="binary", num_classes=2, average = 'macro')
 
         # GraphConv Type
         hfeat = self.hparams.hfeat
@@ -251,13 +248,11 @@ class LitGNN(pl.LightningModule):
         preds = th.argmax(logits1, dim=1)
         preds_func = th.argmax(logits[1], dim=1) if not self.hparams.methodlevel else None
         self.log("val_loss", loss, prog_bar=True, batch_size=batch_idx)
-        self.log("val_auroc", self.auroc(preds, labels), prog_bar=True, batch_size=batch_idx)
         self.log("val_acc", self.accuracy(preds, labels), prog_bar=True, batch_size=batch_idx)
         self.log("val_mcc", self.mcc(preds, labels), prog_bar=True, batch_size=batch_idx)
 
         if not self.hparams.methodlevel:
             self.log("val_acc_func", self.accuracy(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
-            self.log("val_auroc_func", self.auroc(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
             self.log("val_mcc_func", self.mcc(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
         return loss
 
@@ -407,7 +402,7 @@ samplesz = -1
 
 # list of epoch tried [30, 50 , 130, 200, 250], note that effective learning is achieve with hight epchs
 
-max_epochs = 10
+max_epochs = 130
 
 
 if not os.path.exists(path=checkpoint_path):

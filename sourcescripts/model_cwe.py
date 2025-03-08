@@ -63,10 +63,7 @@ class LitGNN(pl.LightningModule):
 
         # Metrics
         self.accuracy = torchmetrics.Accuracy(task="binary", num_classes=2, average = 'macro')
-        self.auroc = torchmetrics.AUROC(task="binary", num_classes=2, average = 'macro')
         self.mcc = torchmetrics.MatthewsCorrCoef(task="binary", num_classes=2)
-        self.prec = torchmetrics.Precision(task="binary", num_classes=2, average = 'macro')
-        self.f11 = torchmetrics.F1Score(task="binary", num_classes=2, average = 'macro')
 
         # GraphConv Type
         hfeat = self.hparams.hfeat
@@ -228,13 +225,11 @@ class LitGNN(pl.LightningModule):
         
         self.log("train_loss", loss, on_epoch=True, prog_bar=True, batch_size=batch_idx)
         self.log("train_loss_func", loss2, on_epoch=True, prog_bar=True, batch_size=batch_idx)
-        self.log("train_auroc", self.auroc(preds, labels), prog_bar=True, batch_size=batch_idx)
         self.log("train_acc", self.accuracy(preds, labels), prog_bar=True, batch_size=batch_idx)
         self.log("train_mcc", self.mcc(preds, labels), prog_bar=True, batch_size=batch_idx)
         
         if not self.hparams.methodlevel:
             self.log("train_acc_func", self.accuracy(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
-            self.log("train_auroc_func", self.auroc(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
             self.log("train_mcc_func", self.mcc(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
 
         return loss
@@ -253,14 +248,12 @@ class LitGNN(pl.LightningModule):
         preds = th.argmax(logits1, dim=1)
         preds_func = th.argmax(logits[1], dim=1) if not self.hparams.methodlevel else None
         self.log("val_loss", loss, prog_bar=True, batch_size=batch_idx)
-        self.log("val_auroc", self.auroc(preds, labels), prog_bar=True, batch_size=batch_idx)
         self.log("val_acc", self.accuracy(preds, labels), prog_bar=True, batch_size=batch_idx)
         self.log("val_mcc", self.mcc(preds, labels), prog_bar=True, batch_size=batch_idx)
         self.log("val_prec", self.prec(preds, labels), prog_bar=True, batch_size=batch_idx)
 
         if not self.hparams.methodlevel:
             self.log("val_acc_func", self.accuracy(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
-            self.log("val_auroc_func", self.auroc(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
             self.log("val_mcc_func", self.mcc(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
             self.log("val_prec", self.prec(preds_func, labels_func), prog_bar=True, batch_size=batch_idx)
         return loss
@@ -282,19 +275,12 @@ class LitGNN(pl.LightningModule):
         metrics = {
             "test_loss": loss,
             "test_acc": self.accuracy(preds, labels),
-            # "test_auroc": self.auroc(preds, labels),
             "test_mcc": self.mcc(preds, labels),
-            # "test_prec": self.prec(preds, labels),
-            # "test_f1": self.f11(preds, labels)
         }
         
         if not self.hparams.methodlevel:
             metrics["test_acc_func"] = self.accuracy(preds_func, labels_func)
             metrics["test_mcc_func"] = self.mcc(preds_func, labels_func)
-            # metrics["test_auroc_func"] = self.auroc(preds_func, labels_func)
-            # metrics['test_f1'] = self.f11(preds_func, labels_func)
-            # metrics['test_prec'] = self.prec(preds_func, labels_func)
-
         self.test_step_outputs.append(metrics)
         return metrics
 
@@ -355,9 +341,6 @@ def statementcalculate_metrics(model, data):
     
     prediction = pd.DataFrame({"true label": all_labels_,
                           "Predicted_label": predicted_classes})
-    # print(f"Predict label {predicted_classes}")
-    # print(f"true label {all_labels_}")
-    
 
     return {
         "accuracy": accuracy,
@@ -401,9 +384,7 @@ def methodcalculate_metrics(model, data):
     roc_ = roc_auc_score(all_labels_, predicted_classes, average= "macro")
     mcc_ = matthews_corrcoef(all_labels_, predicted_classes)
     precisionq, recallq, thresholds = precision_recall_curve(all_labels_, predicted_classes)
-    
     pr_auc = auc(recallq, precisionq)
-    # print(f"all predict 1 {all_preds_}")
     
     prediction = pd.DataFrame({"true label": all_labels_,
                           "Predicted_label": predicted_classes})
@@ -425,9 +406,7 @@ samplesz = -1
 
 # list of epoch tried [30, 50 , 130, 200, 250], note that effective learning is achieve with hight epchs
 
-max_epochs = 10
-
-
+max_epochs = 130
 if not os.path.exists(path=checkpoint_path):
     print(f"[Infos ] --->> Training the model with Domain Knowledge: cwe description")
     run_id = imp.get_run_id()
@@ -479,16 +458,12 @@ if not os.path.exists(path=checkpoint_path):
     metrics1 = methodcalculate_metrics(model, data)[0]
     dfm = pd.DataFrame([metrics1])
     dfm.to_csv(f"{imp.outputs_dir()}/cwe-statement-evaluation_metrics.csv", index=False)
-    prediction_ = methodcalculate_metrics(model, data)[1]
-    prediction_.to_csv(f"{imp.outputs_dir()}/cwe-statement-predict_label.csv", index = False)
     print(f"statelement {metrics1} ")
     # method level
     print(f"method level prediction")
     metrics = statementcalculate_metrics(model, data)[0]
     dfm = pd.DataFrame([metrics])
     dfm.to_csv(f"{imp.outputs_dir()}/cwe-method-evaluation_metrics.csv", index=False)
-    prediction_ = statementcalculate_metrics(model, data)[1]
-    prediction_.to_csv(f"{imp.outputs_dir()}/cwe-method-predict_label.csv", index = False)
     print(f"[Infos ] Metrics on test set \n{metrics}\n[Infos ] -> Done.")
 else:   
     print(f"[Infos ] ---> Saved model exits.")
@@ -511,16 +486,12 @@ else:
     metrics1 = methodcalculate_metrics(model, data)[0]
     dfm = pd.DataFrame([metrics1])
     dfm.to_csv(f"{imp.outputs_dir()}/cwe-statement-evaluation_metrics.csv", index=False)
-    prediction_ = methodcalculate_metrics(model, data)[1]
-    prediction_.to_csv(f"{imp.outputs_dir()}/cwe-statement-predict_label.csv", index = False)
     print(f"statelement {metrics1} ")
     # method level
     print(f"method level prediction")
     metrics = statementcalculate_metrics(model, data)[0]
     dfm = pd.DataFrame([metrics])
     dfm.to_csv(f"{imp.outputs_dir()}/cwe-method-evaluation_metrics.csv", index=False)
-    prediction_ = statementcalculate_metrics(model, data)[1]
-    prediction_.to_csv(f"{imp.outputs_dir()}/cwe-method-predict_label.csv", index = False)
     print(f"[Infos ] Metrics on test set \n{metrics}\n[Infos ] -> Done.")
 
     

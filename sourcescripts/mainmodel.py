@@ -63,10 +63,7 @@ class LitGNN(pl.LightningModule):
 
         # Metrics
         self.accuracy = torchmetrics.Accuracy(task="binary", num_classes=2, average = 'macro')
-        self.auroc = torchmetrics.AUROC(task="binary", num_classes=2, average = 'macro')
         self.mcc = torchmetrics.MatthewsCorrCoef(task="binary", num_classes=2)
-        self.prec = torchmetrics.Precision(task="binary", num_classes=2, average = 'macro')
-        self.f11 = torchmetrics.F1Score(task="binary", num_classes=2, average = 'macro')
 
         # GraphConv Type
         hfeat = self.hparams.hfeat

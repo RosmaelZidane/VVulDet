@@ -1,10 +1,10 @@
 
-chmod +x ./getjoern.sh
-chmod +x ./dataprocessing.sh
-chmod +x ./traimwithcwe.sh
-chmod +x ./trainmain.sh
-chmod +x ./trainwithcve.sh
-chmod +x ./trainwithcvecwe.sh
-chmod +x ./trainwithsample.sh
+chmod +x ./zrun/getjoern.sh
+chmod +x ./zrun/dataprocessing.sh
+chmod +x ./zrun/traimwithcwe.sh
+chmod +x ./zrun/trainmain.sh
+chmod +x ./zrun/trainwithcve.sh
+chmod +x ./zrun/trainwithcvecwe.sh
+chmod +x ./zrun/trainwithsample.sh
 
 echo "Fine!!!"

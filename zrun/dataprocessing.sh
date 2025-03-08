@@ -2,6 +2,7 @@
 # and running Joern to parse functions for obtaining node and edge data.
 
 #!/bin/bash
+cd ..
 
 # Run the first Python script
 python3 ./sourcescripts/getmetadata.py

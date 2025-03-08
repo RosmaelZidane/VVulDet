@@ -65,11 +65,7 @@ class LitGNN(pl.LightningModule):
 
         # Metrics
         self.accuracy = torchmetrics.Accuracy(task="binary", num_classes=2, average = 'macro')
-        self.auroc = torchmetrics.AUROC(task="binary", num_classes=2, average = 'macro')
         self.mcc = torchmetrics.MatthewsCorrCoef(task="binary", num_classes=2)
-        self.prec = torchmetrics.Precision(task="binary", num_classes=2, average = 'macro')
-        self.f11 = torchmetrics.F1Score(task="binary", num_classes=2, average = 'macro')
-
         # GraphConv Type
         hfeat = self.hparams.hfeat
         gatdrop = self.hparams.gatdropout
@@ -393,7 +389,6 @@ def calculate_metrics(model, top1data):
     all_preds_ = np.array(all_preds_)
     all_labels_ = np.array(all_labels_)
 
-
     predicted_classes = np.argmax(all_preds_, axis=1)
     f1_c = f1_score(all_labels_, predicted_classes, average="macro")
     precision = precision_score(all_labels_, predicted_classes, average="macro")
@@ -423,10 +418,10 @@ metadatapath = imp.cache_dir()
 metadata = pd.read_csv(f"{metadatapath}/CVEFixes/CVEFixes_metadata.csv")
 
 grouped_df = metadata.groupby('CWE-ID').size().reset_index(name='Count')
-grouped_df = grouped_df[grouped_df['CWE-ID'] != 'CWE-Other'] # remove function without specific CWE
-grouped_df = grouped_df[grouped_df['CWE-ID'] != 'NVD-CWE-noinfo'] # remove function without specific CWE
-grouped_df = grouped_df[grouped_df['CWE-ID'] != 'CWE-79'] # remove function without specific CWE
-grouped_df = grouped_df[grouped_df['CWE-ID'] == 'CWE-22'] # remove function without specific CWE
+grouped_df = grouped_df[grouped_df['CWE-ID'] != 'CWE-Other'] 
+grouped_df = grouped_df[grouped_df['CWE-ID'] != 'NVD-CWE-noinfo'] 
+grouped_df = grouped_df[grouped_df['CWE-ID'] != 'CWE-79']
+grouped_df = grouped_df[grouped_df['CWE-ID'] == 'CWE-22'] 
 
 # Sort the grouped DataFrame by 'Count' in descending order
 sorted_df = grouped_df.sort_values(by='Count', ascending=False)

@@ -1,3 +1,4 @@
+cd ..
 cd sourcescripts/storage/outputs/
 rm -rf checkpoints
 cd ..
