@@ -1,5 +1,5 @@
 # Train the main model without domain knowledge
-cd ..
+# cd ..
 echo "Training without domain data"
 echo "   The process takes time. "
 echo "The Node2vec should process all functions and generate contextualized graph embedding."

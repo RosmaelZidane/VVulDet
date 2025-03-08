@@ -1,7 +1,7 @@
 # Get Joern and the python dataset
 # the csv is stored in a google file store at 
 # https://drive.google.com/file/d/14vtngKXaBPI43aKRfd6-PoV3peDtd5XU/view?usp=sharing
-cd ..
+# cd ..
 
 if [[ -d sourcescripts/storage/external ]]; then
     echo "storage exists, starting download"
