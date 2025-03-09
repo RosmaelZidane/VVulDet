@@ -6,5 +6,3 @@ echo "The Node2vec should process all functions and generate contextualized grap
 # Sleep for 30 seconds
 sleep 30
 python3 ./sourcescripts/mainmodel.py
-
-python3 ./sourcescripts/testtop-x.py
