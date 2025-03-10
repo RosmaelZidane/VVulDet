@@ -11,8 +11,8 @@
 pip install -r requirements
 ```
 3. Dataset and CPG extraction.
-   - Dataset: We used publicly available datasets named BigVul, ProjectKB, MegaVul, and CVEFixes.
-   - CPG extraction: We use Joern to parse the source code, extracting relevant nodes and edge data.
+   - Dataset: We used publicly available datasets named [BigVul-C/C++](https://drive.google.com/file/d/1-0VhnHBp9IGh90s2wCNjeCMuy70HPl8X/view), [Project_KB-Java](https://github.com/SAP/project-kb.git), [MegaVul-Java](https://github.com/Icyrockton/MegaVul), and [CVEFixes-Python](https://github.com/secureIT-project/CVEfixes).
+   - CPG extraction: We use [Joern](https://joern.io/) to parse the source code, extracting relevant nodes and edge data.
 
 Running the following commands will install a specific Joern version for CPG extraction and download from our drive a Python version of the CVEFixes dataset.
 ```bash
@@ -38,17 +38,19 @@ Training the main model takes considerable time since the CodeBERT model is fine
 ```bash
 ./zrun/trainwithcve.sh
 ```
-- CWE Description
+   - CWE Description
 ```bash
 .zrun/traimwithcwe.sh
 ```
-- CVE and CWE Description
+   - CVE and CWE Description
 ```bash
 ./zrun/trainwithcvecwe.sh
 ```
-- Reference functions
+   - Reference functions
 ```bash
 ./zrun/trainwithsample.sh
 ```
+
+### Section 2: Domain Knowledge Collection
 
 
