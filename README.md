@@ -20,7 +20,6 @@ Running the following commands will install a specific Joern version for CPG ext
 chmod +x ./run.sh
 ./run.sh
 ```
-+
 ```bash
 ./zrun/getjoern.sh
 ```
