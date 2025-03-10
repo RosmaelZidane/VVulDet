@@ -1,10 +1,11 @@
 ## Domain-Aware Graph Neural Networks for Source Code Vulnerability Detection
+Paper submited to [JSS](https://www.sciencedirect.com/journal/journal-of-systems-and-software) Journal.
 
-### Experiment replication.
+### Experiment replication: The source code for training the model is located in ./sourcescripts, and the dataset construction instructions can be found in ./domainknowledge.
 
 1. Clone the project repository.
    ```bash
-   git clone https://github.com/RosmaelZidane/VVulDet.git
+   git clone [https://github.com/RosmaelZidane/VVulDet.git](https://github.com/RosmaelZidane/VVulDet.git)
    ```
 2.  Install the required Python packages.
    ``` ash
@@ -52,5 +53,14 @@ Training the main model takes considerable time since the CodeBERT model is fine
 ```
 
 ### Section 2: Domain Knowledge Collection
+
+- The dataset used are available in ./domainknowledge as well as instruction to add domain information in a given dataset.
+
+
+### Citation
+
+To be provided
+
+
 
 
