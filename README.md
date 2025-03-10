@@ -1,7 +1,7 @@
 ## Domain-Aware Graph Neural Networks for Source Code Vulnerability Detection
 Paper submited to [JSS](https://www.sciencedirect.com/journal/journal-of-systems-and-software) Journal.
 
-### Section1: Experiment replication: The source code for training the model is located in ./sourcescripts, and the dataset construction instructions can be found in ./domainknowledge.
+### Section 1: Experiment replication: The source code for training the model is located in ./sourcescripts, and the dataset construction instructions can be found in ./domainknowledge.
 
 1. Clone the project repository.
    ```bash
