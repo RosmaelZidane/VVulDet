@@ -9,7 +9,7 @@ Paper submited to [JSS](https://www.sciencedirect.com/journal/journal-of-systems
    ```
 2.  Install the required Python packages.
    ``` ash
-pip install -r requirements
+pip install -r requirements.txt
 ```
 3. Dataset and CPG extraction.
    - Dataset: We used publicly available datasets named [BigVul-C/C++](https://drive.google.com/file/d/1-0VhnHBp9IGh90s2wCNjeCMuy70HPl8X/view), [Project_KB-Java](https://github.com/SAP/project-kb.git), [MegaVul-Java](https://github.com/Icyrockton/MegaVul), and [CVEFixes-Python](https://github.com/secureIT-project/CVEfixes).
