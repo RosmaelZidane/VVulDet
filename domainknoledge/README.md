@@ -7,7 +7,7 @@ Domain Knowledge Data Sources.
 
 2 - For the ProjectKB dataset, CVE descriptions are extracted from the [ProjectKB repository](https://github.com/SAP/project-kb/tree/vulnerability-data/statements).
 
-3- [collectreffunction.py]() processes several Mitre web pages to search for reference functions, while [exampletoadd.py] is used to add domain information to the dataset.
+3- [collectreffunction.py]() processes several Mitre web pages to search for reference functions, while [exampletoadd.py]() is used to add domain information to the dataset.
 
 4- Final data plus domain:
 - MegaVul: [Link](https://drive.google.com/file/d/14TT--A5nFHmbNSe3vfqmz930RDAhKFO1/view?usp=sharing)
