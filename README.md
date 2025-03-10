@@ -63,7 +63,7 @@ To be provided
 
 
 ##### Acknowledgment:
-We thank [LineVD](https://github.com/davidhin/linevd) for providing the source code of their project, which has served as a foundation for the current research project.
+###### We thank [LineVD](https://github.com/davidhin/linevd) for providing the source code of their project, which has served as a foundation for the current research project.
 
 
 
