@@ -355,7 +355,7 @@ def assign_line_num_to_local(nodes, edges, code):
 def get_node_edges(filepath, verbose=0):
     """Get node and edges given filepath (must run after run_joern).
 
-    filepath = "/home/david/Documents/projects/singularity-sastvd/storage/processed/CVEFixes/before/53.c"
+    filepath = "/storage/processed/CVEFixes/before/53.c"
     """
     outdir = Path(filepath).parent
     outfile = outdir / Path(filepath).name

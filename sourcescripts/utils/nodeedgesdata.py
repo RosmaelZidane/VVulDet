@@ -105,7 +105,7 @@ def run_joern(filepath: str, verbose: int):
 def get_node_edges(filepath: str, verbose=0):
     """Get node and edges given filepath (must run after run_joern).
 
-    filepath = "/home/david/Documents/projects/singularity-sastvd/storage/processed/CVEFixes/before/53.c"
+    filepath = "/storage/processed/CVEFixes/before/53.c"
     """
     outdir = Path(filepath).parent
     outfile = outdir / Path(filepath).name
@@ -187,35 +187,6 @@ def get_node_edges(filepath: str, verbose=0):
             nodes = pd.concat([nodes, nodes1], ignore_index=True)
 
     return nodes, edges
-
-
-def plot_node_edges(filepath: str, lineNumber: int = -1, filter_edges=[]):
-    """Plot node edges given filepath (must run after get_node_edges).
-
-    TO BE DEPRECATED.
-    """
-    nodes, edges = get_node_edges(filepath)
-
-    if len(filter_edges) > 0:
-        edges = edges[edges.etype.isin(filter_edges)]
-
-    # Draw graph
-    if lineNumber > 0:
-        nodesforline = set(nodes[nodes.lineNumber == lineNumber].id.tolist())
-    else:
-        nodesforline = set(nodes.id.tolist())
-
-    edges_new = edges[
-        (edges.outnode.isin(nodesforline)) | (edges.innode.isin(nodesforline))
-    ]
-    nodes_new = nodes[
-        nodes.id.isin(set(edges_new.outnode.tolist() + edges_new.innode.tolist()))
-    ]
-    dot = get_digraph(
-        nodes_new[["id", "node_label"]].to_numpy().tolist(),
-        edges_new[["outnode", "innode", "etype"]].to_numpy().tolist(),
-    )
-    dot.render("/tmp/tmp.gv", view=True)
 
 
 def full_run_joern(filepath: str, verbose=0):
@@ -357,35 +328,3 @@ def drop_lone_nodes(nodes, edges):
     nodes = nodes[(nodes.id.isin(edges.innode)) | (nodes.id.isin(edges.outnode))]
     return nodes
 
-
-def plot_graph_node_edge_df(
-    nodes, edges, nodeids=[], hop=1, drop_lone_nodes=True, edge_label=True
-):
-    """Plot graph from node and edge dataframes.
-
-    Args:
-        nodes (pd.DataFrame): columns are id, node_label
-        edges (pd.DataFrame): columns are outnode, innode, etype
-        drop_lone_nodes (bool): hide nodes with no in/out edges.
-        lineNumber (int): Plot subgraph around this node.
-    """
-    # Drop lone nodes
-    if drop_lone_nodes:
-        nodes = nodes[(nodes.id.isin(edges.innode)) | (nodes.id.isin(edges.outnode))]
-
-    # Get subgraph
-    if len(nodeids) > 0:
-        nodeids = nodes[nodes.lineNumber.isin(nodeids)].id
-        keep_nodes = neighbour_nodes(nodes, edges, nodeids, hop)
-        keep_nodes = set(list(nodeids) + [i for j in keep_nodes.values() for i in j])
-        nodes = nodes[nodes.id.isin(keep_nodes)]
-        edges = edges[
-            (edges.innode.isin(keep_nodes)) & (edges.outnode.isin(keep_nodes))
-        ]
-
-    dot = get_digraph(
-        nodes[["id", "node_label"]].to_numpy().tolist(),
-        edges[["outnode", "innode", "etype"]].to_numpy().tolist(),
-        edge_label=edge_label,
-    )
-    dot.render("/tmp/tmp.gv", view=True)
