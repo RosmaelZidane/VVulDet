@@ -36,6 +36,8 @@ def rdg(edges, gtype):
         return edges[(edges.etype == "REACHING_DEF") | (edges.etype == "CDG")]
     if gtype == "cfgcdg":
         return edges[(edges.etype == "CFG") | (edges.etype == "CDG")]
+    if gtype == "cpgddg":
+        return edges[(edges.etype == "CFG") | (edges.etype == "DDG")]
     if gtype == "all":
         return edges[
             (edges.etype == "REACHING_DEF")
@@ -43,6 +45,7 @@ def rdg(edges, gtype):
             | (edges.etype == "AST")
             | (edges.etype == "EVAL_TYPE")
             | (edges.etype == "REF")
+            | (edges.etype == "DDG")
         ]
 
 def get_codediff(dataset, iid):
